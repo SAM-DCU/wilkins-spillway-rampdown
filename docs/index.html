@@ -62,7 +62,7 @@
     }
 
     .hero h2 {
-      margin-top: 0;
+      margin-top: 0.4rem;
       color: var(--usace-blue);
       font-size: 1.3rem;
     }
@@ -79,6 +79,16 @@
       padding: 0.4rem 0.6rem;
       display: inline-block;
       margin-bottom: 0.4rem;
+    }
+
+    .dev-note {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: #8a6d3b;
+      background: #fcf8e3;
+      border-radius: 4px;
+      padding: 0.35rem 0.6rem;
+      margin-top: 0.35rem;
     }
 
     .pill {
@@ -198,7 +208,6 @@
       margin: 0 0 1.5rem 0;
       padding: 0;
       width: 100%;
-      position: relative;
       font-family: inherit;
     }
 
@@ -225,15 +234,14 @@
 
     .tabs .tab-panel {
       display: none;
-      overflow: hidden;
       width: 100%;
-      position: absolute;
-      left: 0;
       border-top: 1px solid #ccc;
       background: white;
       padding: 0.9rem 1rem 1rem;
       border-radius: 0 4px 4px 4px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      margin-top: -0.15rem;
+      position: static;   /* prevent overlap with following content */
     }
 
     /* Active tab label */
@@ -265,9 +273,6 @@
       .logo {
         align-self: flex-end;
       }
-      .tabs .tab-panel {
-        position: static;
-      }
     }
   </style>
 </head>
@@ -287,19 +292,28 @@
   <main>
     <section class="hero">
       <div class="welcome">
-        This tool was developed in conjunction with the Sustainable Rivers Program – Old Tombigbee River Study.
+        Welcome – this prototype tool is being refined and reviewed by the Wilkins Old River team.
       </div>
       <br />
+      <span class="dev-note">
+        Under development and technical review – for planning and evaluation only, not automated gate control.
+      </span>
+      <br /><br />
       <div class="pill">Old River – Tombigbee River</div>
-      <h2>Live spillway operations and Nettleton stage model</h2>
+      <h2>Spillway ramp‑down planning and Nettleton stage model</h2>
       <p>
-        This site hosts the live ramp‑down decision tool for Glover Wilkins Lock and Dam
+        This site hosts a ramp‑down decision‑support prototype for Glover Wilkins Lock and Dam
         and the supporting Nettleton gravel bar stage‑prediction methodology.
       </p>
       <p>
-        Use the dashboard to compare sudden closure vs gradual ramp‑down scenarios, and
-        consult the methodology report for full model derivation, validation, and
-        ecological context.
+        The tool is designed to compare immediate spillway closure with progressive gate
+        reductions, highlight when navigation‑pool or inflow constraints limit gradual
+        recession options, and provide transparent calculations for adaptive‑management
+        trials in the Old Tombigbee River.
+      </p>
+      <p>
+        Methods and recommendations are summarized in the draft report
+        <em>Assessment of Spillway Operations, Flow Recession, and Mussel Habitat in the Old Tombigbee River</em>.
       </p>
 
       <div class="button-row">
@@ -311,106 +325,86 @@
         <a class="btn btn-outline"
            href="nettleton-model.html"
            target="_blank" rel="noopener">
-          Open Nettleton model methodology (HTML)
+          Open Nettleton stage‑model report
         </a>
         <a class="btn btn-outline"
            href="rampdown-math.html"
            target="_blank" rel="noopener">
-          Open ramp‑down math formulation (HTML)
+          Open ramp‑down math formulation
         </a>
       </div>
     </section>
 
     <!-- Instructions / Methodology / Contributing data tabs -->
-    <section class="card" style="position:relative; padding-top:0.6rem;">
+    <section class="card" style="padding-top:0.6rem;">
       <ul class="tabs">
         <li>
           <input id="tab1" type="radio" name="tabs" checked />
-          <label for="tab1">Instructions</label>
+          <label for="tab1">How to use this prototype</label>
           <div id="tab-panel1" class="tab-panel">
-            <p><strong>How to use the ramp‑down dashboard:</strong></p>
+            <p><strong>Intended use.</strong> The ramp‑down decision‑support tool is a planning prototype for evaluating staged reductions in Wilkins spillway discharge after sustained releases to the Old Tombigbee River. It is meant to help operators and water managers compare an immediate spillway closure with alternative progressive gate‑closure sequences and to identify when navigation‑pool storage, inflow, or other constraints prevent a preferred gradual recession.</p>
+            <p><strong>Typical workflow.</strong></p>
             <ol style="padding-left:1.1rem;">
-              <li><strong>Refresh live data.</strong> Click “Refresh Live USGS Data” to pull current flows and pool elevations at Fulton, Wilkins, and Bigbee.</li>
-              <li><strong>Confirm current operations.</strong> Use either “Select Operational Step”, “Enter Individual Gates”, or “Use USGS Gate Telemetry” to match the current Wilkins gate pattern.</li>
-              <li><strong>Set constraints.</strong> Specify the minimum navigation pool, maximum allowable stage decline (ft/hr), and how many intermediate steps you want in the ramp‑down.</li>
-              <li><strong>Review outcomes.</strong> The dashboard compares a sudden closure vs a gradual ramp‑down, reports pool drawdown and Nettleton depth, and provides a recommended schedule table.</li>
+              <li><strong>Confirm current conditions.</strong> Verify Wilkins spillway gate configuration (step, individual gates, or telemetry), Wilkins Pool elevation, Old River tailwater, and current or forecasted Bigbee discharge.</li>
+              <li><strong>Enter operating limits.</strong> Specify minimum allowable navigation‑pool elevation, target maximum downstream stage‑decline rate, number and timing of intermediate gate steps, and any known downstream resource constraints.</li>
+              <li><strong>Run comparison.</strong> The tool estimates spillway discharge from the gate‑step schedule and tailwater, generates a sequence of lower steps to Step&nbsp;0, and compares a sudden closure versus a staged ramp‑down in terms of discharge, pool‑volume use, and predicted Nettleton depth.</li>
+              <li><strong>Review outputs.</strong> Proposed action times, target steps, gate settings, estimated spillway discharge, pool‑storage use, and predicted downstream depth are summarized for operator review before any operational trial.</li>
             </ol>
-            <p>
-              The live data are retrieved using the USGS <code>dataRetrieval</code> package and the Water Data APIs for continuous streamflow and stage. [USGS data are public‑domain and freely reusable with appropriate citation.] 
-            </p>
+            <p><strong>Caution.</strong> The current implementation is not an automated control system. Gate‑discharge estimates, storage calculations, downstream stage predictions, travel‑time assumptions, and ecological screening criteria remain subject to calibration and validation and should be interpreted accordingly.</p>
           </div>
         </li>
 
         <li>
           <input id="tab2" type="radio" name="tabs" />
-          <label for="tab2">Methodology overview</label>
+          <label for="tab2">Methodology &amp; adaptive management</label>
           <div id="tab-panel2" class="tab-panel">
             <p>
-              The Nettleton stage model is a multiple linear regression relating water depth
-              at the Nettleton gravel bar to upstream discharge at Fulton (USGS 02431000)
-              and Wilkins Spillway discharge, derived from MOB36 operate log gate settings.
+              The tool combines a Wilkins elevation–storage relation, a spillway gate‑step
+              discharge table, and a linear Nettleton stage model to estimate how different
+              ramp‑down schedules affect downstream water levels and gravel‑bar exposure.
             </p>
             <p>
-              Depth observations came from a HOBO pressure transducer installed at the
-              Nettleton bar and converted to hourly depth above a fixed datum. Hourly
-              upstream flow at Fulton and theoretical spillway discharge from the step
-              table were aligned to build a complete modeling dataset.
+              For a proposed sequence of gate steps, the model accounts for pool storage
+              consumed above a minimum navigation‑pool elevation. When sufficient storage
+              is available, it identifies a staged reduction intended to meet a user‑selected
+              stage‑decline threshold; when storage is limiting, it flags the operation as
+              navigation‑constrained and computes the fastest feasible reduction within the
+              entered limits.
             </p>
             <p>
-              The selected model has the form
-              <code>Depth = −0.4386 + 0.002816·FLOW_FULTON + 0.001131·DISCHARGE_CFS</code>
-              with residual standard error of about 0.27&nbsp;ft and adjusted R² of about
-              0.83 over the observed range. Alternative log‑depth and quadratic models
-              were evaluated, but the linear form was chosen for transparency and
-              operational usability.
+              The prototype does not yet fully represent travel time, tributary inflows,
+              local runoff, floodplain storage, changing tailwater, or site‑specific
+              differences in the relation between Wilkins spillway discharge and stage at
+              Nettleton, Standifer Creek Hunting Club, Bigbee, and other habitats. Each
+              operational trial should therefore be paired with post‑event monitoring of
+              stage response, wetted area, exposed gravel bars, and mussel observations,
+              with results used to refine the tool and its ecological thresholds.
             </p>
             <p>
-              The full derivation, diagnostics, and validation figures are contained in
-              <a href="nettleton-model.html" target="_blank" rel="noopener">
-                nettleton-model.html
-              </a>.
+              The report recommends a multi‑season adaptive‑management pilot to test whether
+              staged spillway reductions can reduce recession rates at key mussel habitats
+              after selected high‑flow events, and emphasizes that ramp‑down rates, hold
+              durations, intermediate steps, and risk thresholds should remain provisional
+              until evaluated against observed responses.
             </p>
           </div>
         </li>
 
         <li>
           <input id="tab3" type="radio" name="tabs" />
-          <label for="tab3">Contributing data</label>
+          <label for="tab3">Key inputs &amp; contributing data</label>
           <div id="tab-panel3" class="tab-panel">
-            <p><strong>Capacity curve – Wilkins pool.</strong></p>
-            <p>
-              The ramp‑down calculations use a Wilkins capacity curve (elevation vs storage,
-              in acre‑feet) to track how much pool storage is consumed during a controlled
-              drawdown. The current implementation is based on a 243–247&nbsp;ft
-              elevation band and can be updated as improved survey or H&amp;H products
-              become available.
-            </p>
-            <p><strong>Spillway step table.</strong></p>
-            <p>
-              The spillway discharge table encodes gate‑by‑gate openings for each
-              operational step and corresponding discharges across a range of tailwater
-              conditions. Contributions to this table (e.g., updated rating curves,
-              additional tailwater bands, or verified CFD/HEC‑RAS results) can be
-              incorporated by editing the step table used in the Shiny app and in the
-              methodology R Markdown.
-            </p>
-            <p><strong>How to contribute:</strong></p>
-            <ol style="padding-left:1.1rem;">
-              <li>Open a pull request in the GitHub repository with:
-                <ul>
-                  <li>Updated Wilkins capacity‑curve data (CSV or RDS), and/or</li>
-                  <li>Updated spillway gate schedule / discharge table.</li>
-                </ul>
-              </li>
-              <li>Briefly document data sources (survey, modeling, or field measurements) and assumptions.</li>
-              <li>Flag whether changes affect only the ramp‑down accounting, only the Nettleton model, or both.</li>
-            </ol>
-            <p>
-              All hydrologic inputs from USGS are obtained via the public
-              <code>dataRetrieval</code> interfaces to USGS Water Data for the Nation and
-              the Water Quality Portal; users are encouraged to cite USGS and WQP data
-              products following the guidance in the package documentation. [attached_file:1]
-            </p>
+            <p><strong>Operator‑verified inputs.</strong> The tool is designed to work with the following conditions entered or confirmed by operators:</p>
+            <ul style="padding-left:1.1rem;">
+              <li>Current Wilkins spillway gate configuration (step, gate openings, or telemetry).</li>
+              <li>Current Wilkins Pool elevation and Old River tailwater elevation.</li>
+              <li>Estimated or measured spillway discharge and forecasted/observed inflow.</li>
+              <li>Minimum allowable navigation‑pool elevation and target maximum downstream stage‑decline rate.</li>
+              <li>Number and timing of intermediate gate steps and any known downstream constraints or resource concerns.</li>
+              <li>Current or forecasted Bigbee discharge.</li>
+            </ul>
+            <p><strong>Hydrologic data sources.</strong> Wilkins elevation–storage relations and spillway step tables are used to estimate pool‑volume use and discharge during ramp‑down. Upstream and downstream flows and stages are obtained from USGS Water Data for the Nation where available; users should cite USGS data products appropriately.[web:474][web:476]</p>
+            <p><strong>Contributing updates.</strong> Improved capacity curves, updated spillway rating information, and new ecological or monitoring data can be incorporated through pull requests to this repository, with brief documentation of methods and assumptions.</p>
           </div>
         </li>
       </ul>
@@ -436,15 +430,15 @@
       </article>
 
       <article class="card">
-        <h3>Nettleton stage model methodology</h3>
+        <h3>Nettleton stage‑model report</h3>
         <div class="meta">
-          Linear regression model relating Nettleton depth to upstream flow at Fulton
-          and Wilkins Spillway discharge.
+          Linear regression relating Nettleton depth to upstream flow at Fulton
+          and Wilkins spillway discharge.
         </div>
         <ul>
           <li>Derivation from HOBO depth sensor, USGS gages, and gate logs.</li>
-          <li>Model fit, diagnostics, and validation (R² ≈ 0.83, SE ≈ 0.27&nbsp;ft).</li>
-          <li>Alternative fits (log‑depth, quadratic) and rationale for final choice.</li>
+          <li>Model fit, diagnostics, and validation.</li>
+          <li>Alternative fits and rationale for the selected form.</li>
         </ul>
         <div class="tag-row">
           <span class="tag">R Markdown</span>
@@ -456,37 +450,57 @@
       <article class="card">
         <h3>Ramp‑down math formulation</h3>
         <div class="meta">
-          Detailed mathematical formulation of the ramp‑down planning logic used in the dashboard.
+          Mathematical description of the ramp‑down planning logic used in the dashboard.
         </div>
         <ul>
-          <li>Defines spillway rating interpolation and step‑sequence construction.</li>
-          <li>Documents pool storage accounting and navigation constraints.</li>
-          <li>Shows example scenarios comparing sudden vs gradual closures.</li>
+          <li>Spillway rating interpolation and step‑sequence construction.</li>
+          <li>Pool‑storage accounting and navigation constraints.</li>
+          <li>Example scenarios comparing sudden vs gradual closures.</li>
         </ul>
         <div class="tag-row">
           <span class="tag">R Markdown</span>
           <span class="tag">Hydrology</span>
-          <span class="tag">Operations research</span>
+          <span class="tag">Operations</span>
         </div>
       </article>
     </section>
 
     <section class="card">
-      <h3>Quick preview of methodology report</h3>
+      <h3>Current flows at Fulton and Bigbee (USGS)</h3>
       <p style="margin-bottom:0.6rem;">
-        The embedded view below shows the full HTML report generated from
-        <code>docs/nettleton-model.Rmd</code>. Open it in a new tab for easier reading.
+        These external links show near real‑time discharge from USGS streamgages at
+        Tombigbee River near Fulton, MS (02431000) and Tombigbee River at Bigbee, MS (02433500).[web:475][web:478]
+        Use them to cross‑check conditions used in the prototype.
       </p>
-      <div class="embed-wrapper">
-        <iframe src="nettleton-model.html" height="600" loading="lazy"
-                title="Nettleton model methodology report">
-        </iframe>
+      <div class="grid">
+        <div>
+          <h4 style="margin-top:0;">Tombigbee River near Fulton, MS (02431000)</h4>
+          <div class="embed-wrapper">
+            <iframe
+              src="https://waterdata.usgs.gov/monitoring-location/USGS-02431000/#parameterCode=00060&period=P7D"
+              height="260"
+              loading="lazy"
+              title="USGS 02431000 Tombigbee River near Fulton, MS – discharge">
+            </iframe>
+          </div>
+        </div>
+        <div>
+          <h4 style="margin-top:0;">Tombigbee River at Bigbee, MS (02433500)</h4>
+          <div class="embed-wrapper">
+            <iframe
+              src="https://waterdata.usgs.gov/monitoring-location/USGS-02433500/#parameterCode=00060&period=P7D"
+              height="260"
+              loading="lazy"
+              title="USGS 02433500 Tombigbee River at Bigbee, MS – discharge">
+            </iframe>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
   <footer>
-    U.S. Army Corps of Engineers · Wilkins Spillway Ramp‑Down Tool ·
+    U.S. Army Corps of Engineers · Wilkins Spillway Ramp‑Down Prototype ·
     GitHub Pages deployment
   </footer>
 </body>
