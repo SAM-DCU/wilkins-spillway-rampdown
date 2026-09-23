@@ -1,0 +1,357 @@
+---
+title: "Derivation and Validation of Nettleton Predictive Stage Model"
+author: "USACE, Mobile District SRP Team (T.Rickey)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(lubridate)
+library(leaflet)
+```
+
+## 1. Purpose and ecological context
+
+The Nettleton gravel bar, located downstream of the Glover Wilkins Lock and Dam on the Tombigbee River, is a critical habitat for freshwater mussels. These organisms are sensitive to rapid decreases in water level; sudden drawdowns can expose mussels, causing desiccation, thermal stress, and stranding‑related mortality.
+
+To support ramp‑down decisions at Wilkins, we derived and validated a predictive stage model that estimates water depth at Nettleton from:
+
+- Upstream river discharge at Fulton, MS (USGS gage 02431000, `FLOW_FULTON`, cfs).
+- Wilkins Spillway discharge (`DISCHARGE_CFS`, cfs), derived from MOB36 operate log gate settings and a spillway step table.
+
+The resulting linear equation is implemented in the Wilkins ramp‑down dashboard (Shiny app) and used to compare sudden closure vs gradual ramp‑down scenarios.
+
+## 2. Raw data sources and preprocessing
+
+### 2.1 Nettleton depth (`nettleton_data`)
+
+- Source: HOBO pressure transducer installed at Nettleton gravel bar.
+- Installation:
+  - Location: N 34°03.565' W 088°28.246'.
+  - Secured with zip ties to a submerged root near the bank, anchored at the end of the gravel bar point above the waterline.
+  - Logging interval: 15 minutes.
+- Period: 2024‑05‑23 to 2024‑09‑04.
+- Processing:
+  - Raw pressure readings were converted to water depth (ft).
+  - Depth values were corrected to a fixed baseline elevation of 205.175 ft, producing the depth series `DEPTH_FT` used in the model.
+  
+```{r nettleton-coordinates}
+# N 34°03.565' W 088°28.246'
+
+lat_nett <- 34 + 3.565 / 60        # 34.0594167
+lon_nett <- -(88 + 28.246 / 60)    # -88.4707667
+
+lat_nett
+lon_nett
+
+# Optional: point as a terra SpatVector in WGS84
+library(terra)
+nett_pt_ll <- vect(
+  data.frame(x = lon_nett, y = lat_nett),
+  geom = c("x", "y"),
+  crs  = "EPSG:4326"
+)
+
+nett_pt_ll
+```
+  
+```{r nettleton-leaflet, echo=FALSE}
+leaflet() %>%
+  addProviderTiles(
+    providers$Esri.WorldImagery,
+    options = providerTileOptions(opacity = 0.6)  # “light” satellite
+  ) %>%
+  addProviderTiles(
+    providers$CartoDB.VoyagerOnlyLabels,          # optional labels on top
+    options = providerTileOptions(opacity = 0.8)
+  ) %>%
+  setView(lng = lon_nett, lat = lat_nett, zoom = 16) %>%
+  addMarkers(
+    lng = lon_nett,
+    lat = lat_nett,
+    popup = "Nettleton gravel bar gage"
+  )
+```
+
+Assuming the raw data were saved as `Data/nettleton_data.rds`:
+
+```{r load-nettleton}
+nettleton_data <- readRDS("Data/nettleton_data.rds")
+
+glimpse(nettleton_data)
+summary(nettleton_data$DEPTH_FT)
+```
+
+```{r nettleton-range}
+nett_start <- min(nettleton_data$DATETIME, na.rm = TRUE)
+nett_end   <- max(nettleton_data$DATETIME, na.rm = TRUE)
+
+nett_start
+nett_end
+```
+
+### 2.2 Upstream discharge at Fulton (`fulton_hourly`)
+
+- Source: USGS Tombigbee River near Fulton, MS – station 02431000.
+- Parameter: `00060` (discharge, cfs).
+- Processing:
+  - 15‑minute USGS discharge data were downloaded for the study period.
+  - Data were aggregated to hourly values, saved as `fulton_hourly` with columns `DATETIME` (POSIXct) and `FLOW_FULTON` (cfs).
+
+```{r load-fulton}
+fulton_hourly <- readRDS("Data/fulton_hourly.rds") %>%
+  as_tibble() %>%
+  rename(
+    DATETIME    = DateTime,     # from your str() output
+    FLOW_FULTON = Fulton.Flow
+  )
+
+glimpse(fulton_hourly)
+summary(fulton_hourly$FLOW_FULTON)
+```
+
+```{r plot-fulton-flow, fig.width=7, fig.height=4}
+fulton_trim <- fulton_hourly %>%
+  filter(DATETIME >= nett_start,
+         DATETIME <= nett_end)
+
+ggplot(fulton_trim, aes(x = DATETIME, y = FLOW_FULTON)) +
+  geom_line(color = "darkgreen") +
+  labs(
+    title = "Tombigbee River Discharge at Fulton (Nettleton gage period)",
+    x = "Date-Time",
+    y = "Upstream Flow (cfs)"
+  ) +
+  theme_minimal()
+```
+
+### 2.3 Wilkins Spillway discharge (`spillway_data_hourly`)
+
+- Source: MOB36 operate log gate settings for Wilkins Spillway.
+- Processing:
+  - Gate settings from the operate log were mapped to a spillway step table (`gate_schedule_lookup`) that encodes gate openings and discharges for each step and tailwater band.
+  - A 15‑minute theoretical spillway discharge time series was generated and aggregated to hourly values, saved as `spillway_data_hourly` with columns `DATETIME` and `DISCHARGE_CFS` (cfs).
+
+```{r load-spillway}
+spillway_data_hourly <- readRDS("Data/spillway_data_hourly.rds")
+
+glimpse(spillway_data_hourly)
+summary(spillway_data_hourly$DISCHARGE_CFS)
+```
+```{r plot-spillway-discharge, fig.width=7, fig.height=4}
+spillway_trim <- spillway_data_hourly %>%
+  filter(DATETIME >= nett_start,
+         DATETIME <= nett_end)
+
+ggplot(spillway_trim, aes(x = DATETIME, y = DISCHARGE_CFS)) +
+  geom_line(color = "steelblue") +
+  labs(
+    title = "Wilkins Spillway Discharge (Nettleton gage period)",
+    x = "Date-Time",
+    y = "Spillway Discharge (cfs)"
+  ) +
+  theme_minimal()
+```
+
+## 3. Building the modeling dataset (`model_data`)
+
+### 3.1 Hourly Nettleton depth
+
+We aggregated the 15‑minute HOBO depths to hourly means to align with the hourly flow series:
+
+```{r nettleton-hourly}
+nettleton_hourly <- nettleton_data %>%
+  mutate(DATETIME = floor_date(DATETIME, "hour")) %>%
+  group_by(DATETIME) %>%
+  summarise(
+    DEPTH_FT = mean(DEPTH_FT, na.rm = TRUE)
+  )
+
+glimpse(nettleton_hourly)
+```
+
+```{r plot-nettleton-depth, fig.width=7, fig.height=4}
+nett_trim <- nettleton_hourly %>%
+  filter(DATETIME >= nett_start,
+         DATETIME <= nett_end)
+
+ggplot(nett_trim, aes(x = DATETIME, y = DEPTH_FT)) +
+  geom_line(color = "firebrick") +
+  labs(
+    title = "Nettleton Gravel Bar Water Depth",
+    x = "Date-Time",
+    y = "Depth (ft)"
+  ) +
+  theme_minimal()
+```
+
+### 3.2 Merge upstream and spillway series
+
+We joined the three hourly series on `DATETIME`:
+
+```{r build-model-data}
+model_data <- nettleton_hourly %>%
+  left_join(fulton_hourly,        by = "DATETIME") %>%
+  left_join(spillway_data_hourly, by = "DATETIME")
+
+glimpse(model_data)
+summary(model_data$DEPTH_FT)
+summary(model_data$FLOW_FULTON)
+summary(model_data$DISCHARGE_CFS)
+```
+
+### 3.3 Complete cases for modeling
+
+We restrict the model to rows with non‑missing depth and discharge values:
+
+```{r complete-cases}
+model_data_complete <- model_data %>%
+  filter(
+    !is.na(DEPTH_FT),
+    !is.na(FLOW_FULTON),
+    !is.na(DISCHARGE_CFS)
+  )
+
+nrow(model_data_complete)
+glimpse(model_data_complete)
+```
+
+## 4. Multiple linear regression fit
+
+We fit a simple linear model relating Nettleton depth to upstream and spillway discharge:
+
+```{r fit-linear-model}
+final_model <- lm(
+  DEPTH_FT ~ FLOW_FULTON + DISCHARGE_CFS,
+  data = model_data_complete
+)
+
+summary(final_model)
+glance(final_model)
+coef(final_model)
+```
+
+From the output (example):
+
+- Intercept: approximately −0.4386 ft.
+- Upstream flow (`FLOW_FULTON`): approximately 0.002816 ft per cfs.
+- Spillway discharge (`DISCHARGE_CFS`): approximately 0.001131 ft per cfs.
+
+Thus, the predictive rating curve is:
+
+\[
+\text{DEPTH}_\text{Nettleton} \approx
+-0.4386 + 0.002816 \cdot Q_\text{upstream} + 0.001131 \cdot Q_\text{spillway},
+\]
+
+where `FLOW_FULTON` and `DISCHARGE_CFS` are in cfs.
+
+Model performance:
+
+- Residual standard error ≈ 0.27 ft.
+- Multiple R² ≈ 0.83, adjusted R² ≈ 0.83.
+
+This indicates that approximately 83% of the variance in Nettleton depth is statistically explained by upstream and spillway discharge, with typical errors on the order of a few tenths of a foot.
+
+## 5. Model diagnostics
+
+### 5.1 Standard lm diagnostics
+
+```{r diagnostics-plots}
+par(mfrow = c(2, 2))
+plot(final_model)
+par(mfrow = c(1, 1))
+```
+
+### 5.2 Residuals vs upstream and spillway discharge
+
+```{r residuals-vs-flows}
+model_aug <- augment(final_model, data = model_data_complete)
+
+ggplot(model_aug, aes(x = DISCHARGE_CFS, y = .resid)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(se = FALSE, color = "blue") +
+  labs(
+    x = "Spillway Discharge (cfs)",
+    y = "Residual (Observed - Predicted, ft)",
+    title = "Residuals vs Spillway Discharge"
+  ) +
+  theme_minimal()
+
+ggplot(model_aug, aes(x = FLOW_FULTON, y = .resid)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(se = FALSE, color = "blue") +
+  labs(
+    x = "Upstream Flow (cfs)",
+    y = "Residual (Observed - Predicted, ft)",
+    title = "Residuals vs Upstream Flow"
+  ) +
+  theme_minimal()
+```
+
+## 6. Validation using `predictions_linear`
+
+```{r predictions-linear}
+predictions_linear <- model_aug %>%
+  transmute(
+    DATETIME        = DATETIME,
+    DEPTH_FT        = DEPTH_FT,
+    DISCHARGE_CFS   = DISCHARGE_CFS,
+    FLOW_FULTON     = FLOW_FULTON,
+    PREDICTED_DEPTH = .fitted,
+    residual        = .resid
+  )
+
+glimpse(predictions_linear)
+summary(predictions_linear$residual)
+```
+
+```{r applied-r2}
+ss_res <- sum(predictions_linear$residual^2, na.rm = TRUE)
+ss_tot <- sum(
+  (predictions_linear$DEPTH_FT - mean(predictions_linear$DEPTH_FT, na.rm = TRUE))^2,
+  na.rm = TRUE
+)
+r2_applied <- 1 - ss_res / ss_tot
+r2_applied
+```
+
+### 6.1 Observed vs predicted depth
+
+```{r observed-vs-predicted}
+ggplot(predictions_linear,
+       aes(x = PREDICTED_DEPTH, y = DEPTH_FT)) +
+  geom_point(alpha = 0.4) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(
+    x = "Predicted Nettleton Depth (ft)",
+    y = "Observed Nettleton Depth (ft)",
+    title = "Observed vs Predicted Depth at Nettleton"
+  ) +
+  theme_minimal()
+```
+
+## 7. Alternative fits and final choice
+
+We briefly evaluated log‑depth and quadratic models as sensitivity checks. These alternatives produced modest changes in diagnostics but did not materially change operational conclusions relative to the simpler linear model. Given the dashboard's emphasis on transparency and planning‑level comparisons, we retained the linear rating curve as the implementation and treat alternative fits as exploratory.
+
+## 8. Implementation in the Wilkins ramp‑down dashboard
+
+```{r, eval=FALSE}
+# Conceptual implementation in the app:
+Depth_Nettleton_ft <- pmax(
+  0,
+  -0.4386 + 0.002816 * FLOW_FULTON + 0.001131 * DISCHARGE_CFS
+)
+```
+
+This depth estimate is used to compare sudden vs gradual ramp‑down scenarios and to communicate expected stage changes at Nettleton as part of the reddot review package.
