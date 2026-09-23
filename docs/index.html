@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wilkins Spillway Ramp-Down – Nettleton Stage Model</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --usace-red: #d9534f;
+      --usace-blue: #2c3e50;
+      --bg: #f7f5f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      background: white;
+      border-bottom: 3px solid var(--usace-red);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      margin: 0;
+      color: var(--usace-blue);
+    }
+
+    header span.sub {
+      display: block;
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    .logo {
+      height: 52px;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 1.5rem auto 3rem;
+      padding: 0 1rem;
+    }
+
+    .hero {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+      border-left: 5px solid var(--usace-red);
+    }
+
+    .hero h2 {
+      margin-top: 0;
+      color: var(--usace-blue);
+      font-size: 1.3rem;
+    }
+
+    .hero p {
+      margin: 0.4rem 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #fbe9e9;
+      color: #a94442;
+      margin-bottom: 0.4rem;
+    }
+
+    .button-row {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease, box-shadow 0.05s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--usace-red);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary:hover {
+      background: #c74440;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--usace-blue);
+      border-color: #d0d0d0;
+    }
+
+    .btn-outline:hover {
+      background: #f4f4f4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      border-top: 3px solid #e1e1e1;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.05rem;
+      color: var(--usace-blue);
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 0.4rem;
+    }
+
+    .tag-row {
+      margin-top: 0.4rem;
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      background: #eef4fb;
+      color: #385988;
+      margin-right: 0.3rem;
+    }
+
+    .embed-wrapper {
+      margin-top: 0.75rem;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    iframe {
+      width: 100%;
+      border: none;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #888;
+      margin: 1rem 0 2rem;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        gap: 0.6rem;
+      }
+      .logo {
+        align-self: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>
+        Wilkins Spillway Ramp‑Down Dashboard
+        <span class="sub">Nettleton Gravel Bar Stage &amp; Ecological Risk</span>
+      </h1>
+    </div>
+    <img class="logo"
+         src="https://upload.wikimedia.org/wikipedia/commons/8/81/USACE_logo.png"
+         alt="USACE logo" />
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="pill">Old River – Tombigbee River</div>
+      <h2>Live spillway operations and Nettleton stage model</h2>
+      <p>
+        This site hosts the live ramp‑down decision tool for Glover Wilkins Lock and Dam
+        and the supporting Nettleton gravel bar stage‑prediction methodology.
+      </p>
+      <p>
+        Use the dashboard to compare sudden closure vs gradual ramp‑down scenarios, and
+        consult the methodology report for full model derivation, validation, and
+        ecological context.
+      </p>
+
+      <div class="button-row">
+        <a class="btn btn-primary"
+           href="https://sam-dcu.shinyapps.io/RampDownTool/"
+           target="_blank" rel="noopener">
+          Open live ramp‑down dashboard
+        </a>
+        <a class="btn btn-outline"
+           href="nettleton-model.html"
+           target="_blank" rel="noopener">
+          Open Nettleton model methodology (HTML)
+        </a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h3>Ramp‑down dashboard (Shiny app)</h3>
+        <div class="meta">
+          Uses live USGS data (Fulton, Wilkins, Bigbee) via <code>dataRetrieval</code> to
+          estimate ecological risk and recommend a step‑down schedule.
+        </div>
+        <ul>
+          <li>Recognizes current step from Wilkins gate telemetry or manual inputs.</li>
+          <li>Compares sudden closure vs gradual ramp‑down hydrographs.</li>
+          <li>Flags navigation constraints and ecological ramp‑rate exceedances.</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag">Shiny</span>
+          <span class="tag">USGS NWIS / WaterData</span>
+          <span class="tag">Ramp‑down planning</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>Nettleton stage model methodology</h3>
+        <div class="meta">
+          Linear regression model relating Nettleton depth to upstream flow at Fulton
+          and Wilkins Spillway discharge.
+        </div>
+        <ul>
+          <li>Derivation from HOBO depth sensor, USGS gages, and gate logs.</li>
+          <li>Model fit, diagnostics, and validation (R² ≈ 0.83, SE ≈ 0.27 ft).</li>
+          <li>Alternative fits (log‑depth, quadratic) and rationale for final choice.</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag">R Markdown</span>
+          <span class="tag">Linear model</span>
+          <span class="tag">Ecological risk</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="card">
+      <h3>Quick preview of methodology report</h3>
+      <p style="margin-bottom:0.6rem;">
+        The embedded view below shows the full HTML report generated from
+        <code>docs/nettleton-model.Rmd</code>. Open it in a new tab for easier reading.
+      </p>
+      <div class="embed-wrapper">
+        <!-- Adjust height as needed; GitHub Pages will serve nettleton-model.html from docs/ -->
+        <iframe src="nettleton-model.html" height="600" loading="lazy"
+                title="Nettleton model methodology report">
+        </iframe>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    U.S. Army Corps of Engineers · Wilkins Spillway Ramp‑Down Tool ·
+    GitHub Pages deployment
+  </footer>
+</body>
+</html>
